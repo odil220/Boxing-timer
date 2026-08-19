@@ -1,15 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Music } from 'lucide-react';
 import BottomNav from './components/BottomNav';
 import TimerSetup from './components/TimerSetup';
 import ActiveTimer from './components/ActiveTimer';
 import CompletionView from './components/CompletionView';
-import MusicPage from './components/MusicPage';
 import ConfirmDialog from './components/ConfirmDialog';
 import SettingsSheet from './components/SettingsSheet';
+import MusicTab from './components/music/MusicTab';
 import { useTimer } from './hooks/useTimer';
-import { useMusicPlayer } from './hooks/useAudio';
+import { useMusicPlayer } from './hooks/useMusicPlayer';
 
 export default function App() {
   const [page, setPage] = useState('timer');
@@ -24,37 +23,19 @@ export default function App() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const { timer, startWorkout, pause, resume, endWorkout, playBeep } = useTimer(settings, settings.soundEnabled);
+  const { timer, startWorkout, pause, resume, endWorkout } = useTimer(settings, settings.soundEnabled);
   const music = useMusicPlayer();
 
-  const handleStart = () => {
-    startWorkout();
-  };
+  const handleStart = () => { startWorkout(); };
 
   const handlePause = () => {
-    if (timer.isPaused) {
-      resume();
-    } else {
-      pause();
-    }
+    if (timer.isPaused) { resume(); } else { pause(); }
   };
 
-  const handleEnd = () => {
-    setDialogOpen(true);
-  };
-
-  const handleConfirmEnd = () => {
-    setDialogOpen(false);
-    endWorkout();
-  };
-
-  const handleStartAgain = () => {
-    startWorkout();
-  };
-
-  const handleDone = () => {
-    endWorkout();
-  };
+  const handleEnd = () => { setDialogOpen(true); };
+  const handleConfirmEnd = () => { setDialogOpen(false); endWorkout(); };
+  const handleStartAgain = () => { startWorkout(); };
+  const handleDone = () => { endWorkout(); };
 
   const showTimer = page === 'timer';
   const showMusic = page === 'music';
@@ -72,12 +53,11 @@ export default function App() {
           {showTimer && timer.phase === 'complete' && (
             <CompletionView key="complete" rounds={settings.rounds} onDone={handleDone} onAgain={handleStartAgain} />
           )}
-          {showMusic && <MusicPage key="music" />}
+          {showMusic && <MusicTab key="music" player={music} />}
         </AnimatePresence>
       </main>
 
       <BottomNav page={page} onChange={setPage} />
-
       <ConfirmDialog open={dialogOpen} onConfirm={handleConfirmEnd} onCancel={() => setDialogOpen(false)} />
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} settings={settings} setSettings={setSettings} />
     </div>
