@@ -1,0 +1,13 @@
+.icon-button { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: #171716; transition: background var(--fast), color var(--fast), transform var(--fast); }
+.icon-button:hover { background: var(--surface-raised); color: var(--text); }
+.icon-button svg { width: 1.15rem; height: 1.15rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.app-button { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); min-height: 3.4rem; padding: .8rem 1.25rem; border-radius: var(--r-pill); font-weight: 700; transition: filter var(--fast), background var(--fast), transform var(--fast); }
+.primary-button { width: 100%; background: #171716; color: #f8f7f3; }
+.primary-button:hover { filter: brightness(1.08); }
+.secondary-button { background: #fff; color: #171716; border: 1px solid var(--line); }
+.text-button { min-height: 2.75rem; padding: .5rem .9rem; border-radius: var(--r-pill); background: transparent; color: var(--text-soft); transition: background var(--fast), color var(--fast), transform var(--fast); }
+.text-button:hover { background: var(--surface-raised); color: var(--text); }
+.toggle { position: relative; width: 3.25rem; height: 2rem; padding: .2rem; border-radius: var(--r-pill); background: var(--surface-strong); transition: background var(--fast); }
+.toggle.is-on { background: #171716; }
+.toggle-thumb { display: block; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px #0004; transition: transform var(--normal); }
+.toggle.is-on .toggle-thumb { transform: translateX(1.25rem); }

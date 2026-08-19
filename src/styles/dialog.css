@@ -1,0 +1,7 @@
+.dialog-layer { position: fixed; z-index: 20; inset: 0; display: grid; place-items: end center; padding: 1rem; background: #0008; backdrop-filter: blur(8px); }
+.confirm-sheet { width: min(100%, 29rem); padding: 1.35rem; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); box-shadow: 0 24px 80px #0008; animation: sheet-in var(--normal) both; }
+.confirm-sheet h2 { margin: 0; font-size: 1.6rem; letter-spacing: -.05em; }
+.dialog-copy { margin: .5rem 0 1.25rem; color: var(--text-soft); font-size: .9rem; }
+.dialog-actions { display: grid; gap: .55rem; }
+.danger-button-fill { width: 100%; background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
+@keyframes sheet-in { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: translateY(0); } }

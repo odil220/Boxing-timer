@@ -1,0 +1,19 @@
+.timer-view { display: flex; flex-direction: column; padding: .75rem 0 .5rem; }
+.timer-meta { display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.timer-meta strong { color: var(--text-soft); font-weight: 700; }
+.timer-center { display: grid; place-items: center; flex: 1; min-height: 0; }
+.timer-orbit { --progress: 0deg; display: grid; place-items: center; width: min(80vw, 22rem); aspect-ratio: 1; padding: .45rem; border-radius: 50%; background: conic-gradient(var(--phase-color, var(--accent-blue)) var(--progress), var(--line) 0); transition: background 500ms linear; }
+.timer-orbit-inner { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: var(--bg); text-align: center; }
+.phase-label { margin: 0 0 .45rem; color: var(--phase-color, var(--accent-blue)); font-size: .75rem; font-weight: 850; letter-spacing: .18em; text-transform: uppercase; transition: color var(--normal); }
+.timer-number { min-width: 5.6ch; color: var(--text); font-size: clamp(4.2rem, 19vw, 7rem); font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: .01em; line-height: .9; }
+.timer-round { min-width: 9rem; margin: .9rem 0 0; color: var(--text-soft); font-size: .9rem; }
+.timer-hint { min-height: 1.5rem; margin: -1rem 0 1rem; color: var(--text-muted); font-size: .82rem; text-align: center; }
+.timer-actions { display: grid; justify-items: center; gap: .5rem; }
+.pause-control { display: inline-flex; align-items: center; justify-content: center; gap: .7rem; min-width: 9.5rem; min-height: 3.6rem; padding: .75rem 1.4rem; border-radius: var(--r-pill); background: var(--text); color: var(--bg); font-weight: 750; transition: transform var(--fast), filter var(--fast); }
+.pause-control:hover { filter: brightness(1.08); }
+.pause-symbol { display: inline-flex; gap: 3px; }
+.pause-symbol i { width: 3px; height: 13px; border-radius: 2px; background: currentColor; }
+.pause-symbol.is-play i:first-child { width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 10px solid currentColor; background: transparent; }
+.pause-symbol.is-play i:last-child { display: none; }
+.timer-end { color: var(--danger); }
+@media (max-height: 700px) { .timer-orbit { width: min(66vw, 18rem); } .timer-number { font-size: clamp(3.7rem, 16vw, 5.6rem); } }
