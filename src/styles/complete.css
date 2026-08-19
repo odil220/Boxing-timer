@@ -1,8 +1,0 @@
-.complete-view { display: flex; flex-direction: column; justify-content: center; padding: 1rem 0 2rem; }
-.complete-check { display: grid; place-items: center; width: 4rem; height: 4rem; margin-bottom: 1.75rem; border-radius: 50%; background: var(--accent); color: #142009; font-size: 2rem; font-weight: 800; animation: check-in 500ms var(--ease) both; }
-.complete-view h1 { margin: 0; font-size: clamp(2.5rem, 12vw, 4rem); letter-spacing: -.07em; line-height: .95; }
-.complete-view h1 span { color: var(--text-soft); }
-.complete-copy { margin: 1.5rem 0; color: var(--text-soft); }
-.complete-actions { margin-top: auto; }
-.complete-actions .text-button { display: block; margin: .6rem auto 0; }
-@keyframes check-in { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }

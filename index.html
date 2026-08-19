@@ -1,15 +1,171 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0b0d0f" />
-    <meta name="description" content="A focused boxing timer and local music player." />
-    <title>Boxing Timer</title>
-    <script type="module" crossorigin src="./assets/index-8N_mDzqj.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-C5muASFX.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Boxing Timer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app" class="app">
+
+    <!-- Setup Screen -->
+    <section class="screen is-active" id="screen-setup" aria-label="Setup">
+      <header class="app-header">
+        <h1 class="logo">Boxing Timer</h1>
+        <button type="button" class="btn btn-ghost btn-icon" id="btn-settings" aria-label="Settings">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </button>
+      </header>
+
+      <div class="setup-content">
+        <p class="subtitle">Set your rounds. Start training.</p>
+
+        <ul class="settings-list">
+          <li class="setting-row">
+            <span class="setting-label">Rounds</span>
+            <div class="stepper">
+              <button type="button" class="stepper-btn" id="rounds-decrease" aria-label="Decrease rounds">−</button>
+              <div class="stepper-value" id="rounds-value">6</div>
+              <button type="button" class="stepper-btn" id="rounds-increase" aria-label="Increase rounds">+</button>
+            </div>
+          </li>
+
+          <li class="setting-row">
+            <span class="setting-label">Round</span>
+            <div class="stepper">
+              <button type="button" class="stepper-btn" id="round-duration-decrease" aria-label="Decrease round duration">−</button>
+              <div class="stepper-value" id="round-duration-value">3:00</div>
+              <button type="button" class="stepper-btn" id="round-duration-increase" aria-label="Increase round duration">+</button>
+            </div>
+          </li>
+
+          <li class="setting-row">
+            <span class="setting-label">Rest</span>
+            <div class="stepper">
+              <button type="button" class="stepper-btn" id="rest-duration-decrease" aria-label="Decrease rest duration">−</button>
+              <div class="stepper-value" id="rest-duration-value">1:00</div>
+              <button type="button" class="stepper-btn" id="rest-duration-increase" aria-label="Increase rest duration">+</button>
+            </div>
+          </li>
+
+          <li class="setting-row setting-row--toggle">
+            <span class="setting-label">Start countdown</span>
+            <label class="toggle" for="start-countdown">
+              <input type="checkbox" id="start-countdown" checked />
+              <span class="toggle-track"></span>
+            </label>
+          </li>
+        </ul>
+
+        <button type="button" class="btn btn-primary btn-block" id="btn-start-workout">Start Workout</button>
+      </div>
+    </section>
+
+    <!-- Timer Screen -->
+    <section class="screen" id="screen-timer" aria-label="Timer">
+      <div class="timer-content">
+        <div class="phase-label" id="phase-label">ROUND</div>
+        <div class="timer-wrapper">
+          <svg class="progress-ring" viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="progress-ring-bg" cx="100" cy="100" r="90" />
+            <circle class="progress-ring-progress" cx="100" cy="100" r="90" />
+          </svg>
+          <div class="timer-display" id="timer-display">3:00</div>
+        </div>
+        <div class="round-indicator" id="round-indicator">Round 1 of 6</div>
+      </div>
+
+      <div class="timer-controls">
+        <button type="button" class="btn btn-primary btn-circle" id="btn-pause" aria-label="Pause workout">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="6" y="5" width="4" height="14" rx="1" />
+            <rect x="14" y="5" width="4" height="14" rx="1" />
+          </svg>
+        </button>
+        <button type="button" class="btn btn-ghost btn-text" id="btn-end-workout">End Workout</button>
+      </div>
+
+      <!-- Countdown Overlay -->
+      <div class="overlay" id="overlay-countdown" aria-hidden="true">
+        <div class="overlay-content">
+          <div class="countdown-label">GET READY</div>
+          <div class="countdown-number" id="countdown-number">3</div>
+        </div>
+      </div>
+
+      <!-- Paused Overlay -->
+      <div class="overlay" id="overlay-paused" aria-hidden="true">
+        <div class="overlay-content">
+          <div class="paused-label">PAUSED</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Complete Screen -->
+    <section class="screen" id="screen-complete" aria-label="Complete">
+      <div class="complete-content">
+        <div class="complete-icon" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+        </div>
+        <h2 class="complete-title">Workout Complete</h2>
+        <p class="complete-summary" id="complete-summary">6 rounds completed</p>
+        <div class="complete-actions">
+          <button type="button" class="btn btn-primary btn-block" id="btn-start-again">Start Again</button>
+          <button type="button" class="btn btn-ghost btn-block" id="btn-done">Done</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Settings Sheet -->
+  <div class="sheet-backdrop" id="sheet-settings" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Settings">
+      <div class="sheet-handle"></div>
+      <div class="sheet-content">
+        <ul class="sheet-settings-list">
+          <li class="sheet-setting-row">
+            <span class="sheet-setting-label">Theme</span>
+            <div class="segmented-control" id="theme-control">
+              <button type="button" class="segmented-btn" data-theme="system">System</button>
+              <button type="button" class="segmented-btn" data-theme="light">Light</button>
+              <button type="button" class="segmented-btn" data-theme="dark">Dark</button>
+            </div>
+          </li>
+          <li class="sheet-setting-row">
+            <span class="sheet-setting-label">Sound</span>
+            <label class="toggle" for="setting-sound">
+              <input type="checkbox" id="setting-sound" checked />
+              <span class="toggle-track"></span>
+            </label>
+          </li>
+        </ul>
+      </div>
+      <button type="button" class="btn btn-primary btn-block" id="btn-close-settings">Done</button>
+    </div>
+  </div>
+
+  <!-- End Workout Dialog -->
+  <div class="dialog-backdrop" id="dialog-end-workout">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-end-title" aria-describedby="dialog-end-desc">
+      <h2 class="dialog-title" id="dialog-end-title">End workout?</h2>
+      <p class="dialog-description" id="dialog-end-desc">Your current session will stop.</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-end">Keep Training</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-end">End Workout</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="a11y-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="app.js"></script>
+</body>
 </html>

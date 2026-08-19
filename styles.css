@@ -1,0 +1,883 @@
+/* ============================================
+   1. DESIGN TOKENS
+   ============================================ */
+
+:root {
+  --color-bg: hsl(0, 0%, 0%);
+  --color-surface: hsl(0, 0%, 6%);
+  --color-surface-secondary: hsl(0, 0%, 10%);
+  --color-surface-raised: hsl(0, 0%, 12%);
+  --color-text-primary: hsl(0, 0%, 100%);
+  --color-text-secondary: hsl(0, 0%, 70%);
+  --color-text-tertiary: hsl(0, 0%, 50%);
+  --color-accent: hsl(210, 90%, 55%);
+  --color-danger: hsl(0, 85%, 60%);
+  --color-border: hsl(0, 0%, 15%);
+  --color-focus: hsl(210, 90%, 55%);
+  --color-overlay: rgba(0, 0, 0, 0.7);
+  --color-backdrop: rgba(0, 0, 0, 0.4);
+  --color-success: hsl(150, 70%, 45%);
+
+  --font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 17px;
+  --font-size-lg: 21px;
+  --font-size-xl: 28px;
+  --font-size-2xl: 34px;
+  --font-size-3xl: 40px;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+
+  --motion-instant: 100ms;
+  --motion-fast: 250ms;
+  --motion-normal: 320ms;
+  --motion-slow: 1000ms;
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --layout-max-width: 430px;
+  --layout-padding: 20px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --color-bg: hsl(0, 0%, 97%);
+  --color-surface: hsl(0, 0%, 100%);
+  --color-surface-secondary: hsl(0, 0%, 96%);
+  --color-surface-raised: hsl(0, 0%, 94%);
+  --color-text-primary: hsl(0, 0%, 10%);
+  --color-text-secondary: hsl(0, 0%, 40%);
+  --color-text-tertiary: hsl(0, 0%, 60%);
+  --color-accent: hsl(210, 90%, 52%);
+  --color-danger: hsl(0, 85%, 50%);
+  --color-border: hsl(0, 0%, 88%);
+  --color-focus: hsl(210, 90%, 52%);
+  --color-overlay: rgba(0, 0, 0, 0.5);
+  --color-backdrop: rgba(0, 0, 0, 0.3);
+  --color-success: hsl(150, 70%, 40%);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --color-bg: hsl(0, 0%, 97%);
+    --color-surface: hsl(0, 0%, 100%);
+    --color-surface-secondary: hsl(0, 0%, 96%);
+    --color-surface-raised: hsl(0, 0%, 94%);
+    --color-text-primary: hsl(0, 0%, 10%);
+    --color-text-secondary: hsl(0, 0%, 40%);
+    --color-text-tertiary: hsl(0, 0%, 60%);
+    --color-accent: hsl(210, 90%, 52%);
+    --color-danger: hsl(0, 85%, 50%);
+    --color-border: hsl(0, 0%, 88%);
+    --color-focus: hsl(210, 90%, 52%);
+    --color-overlay: rgba(0, 0, 0, 0.5);
+    --color-backdrop: rgba(0, 0, 0, 0.3);
+    --color-success: hsl(150, 70%, 40%);
+  }
+}
+
+/* ============================================
+   2. RESET / BASE
+   ============================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  min-height: 100dvh;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+ul {
+  list-style: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus visible */
+*:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* ============================================
+   3. LAYOUT
+   ============================================ */
+
+.app {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/* ============================================
+   4. SCREENS
+   ============================================ */
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-normal) var(--ease-out);
+  z-index: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+.screen.is-active {
+  position: relative;
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+  transition: opacity var(--motion-normal) var(--ease-out);
+}
+
+/* ============================================
+   5. TYPOGRAPHY
+   ============================================ */
+
+.logo {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xl);
+}
+
+.setting-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.phase-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  transition: color var(--motion-normal) var(--ease-out), opacity var(--motion-normal) var(--ease-out);
+}
+
+.phase-label.phase-rest {
+  color: var(--color-text-secondary);
+}
+
+.round-indicator {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.02em;
+  min-height: 1.4em;
+  font-variant-numeric: tabular-nums;
+}
+
+.complete-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.complete-summary {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-sm);
+}
+
+.dialog-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.dialog-description {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-sm);
+}
+
+.sheet-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.sheet-setting-label {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+}
+
+/* ============================================
+   6. COMPONENTS — BUTTONS
+   ============================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: 500;
+  font-size: var(--font-size-base);
+  line-height: 1.3;
+  transition: opacity var(--motion-fast) var(--ease-out), transform var(--motion-instant) var(--ease-out), background-color var(--motion-fast) var(--ease-out);
+  -webkit-user-select: none;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #ffffff;
+  padding: 16px var(--space-lg);
+  border-radius: var(--radius-pill);
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+}
+
+.btn-icon {
+  padding: var(--space-sm);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-secondary);
+}
+
+.btn-icon:hover {
+  background: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+}
+
+.btn-circle {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.btn-circle:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-circle .icon {
+  width: 24px;
+  height: 24px;
+}
+
+.btn-text {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.btn-text:hover:not(:disabled) {
+  color: var(--color-danger);
+}
+
+/* ============================================
+   7. COMPONENTS — STEPPER
+   ============================================ */
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1;
+  transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-instant) var(--ease-out), opacity var(--motion-fast) var(--ease-out);
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background: var(--color-surface-raised);
+}
+
+.stepper-btn:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.stepper-value {
+  min-width: 56px;
+  text-align: center;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* ============================================
+   8. COMPONENTS — TOGGLE
+   ============================================ */
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--color-surface-secondary);
+  border-radius: var(--radius-pill);
+  transition: background-color var(--motion-fast) var(--ease-out);
+  border: 1.5px solid var(--color-border);
+}
+
+.toggle-track::before {
+  content: "";
+  position: absolute;
+  height: 22px;
+  width: 22px;
+  left: 2px;
+  bottom: 2px;
+  background: var(--color-text-primary);
+  border-radius: 50%;
+  transition: transform var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle input:checked + .toggle-track {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.toggle input:checked + .toggle-track::before {
+  transform: translateX(20px);
+  background: #ffffff;
+}
+
+.toggle input:focus-visible + .toggle-track {
+  box-shadow: 0 0 0 4px var(--color-focus);
+}
+
+/* ============================================
+   9. COMPONENTS — SEGMENTED CONTROL
+   ============================================ */
+
+.segmented-control {
+  display: inline-flex;
+  background: var(--color-surface-secondary);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  gap: 2px;
+}
+
+.segmented-btn {
+  flex: 1;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  transition: all var(--motion-fast) var(--ease-out);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+.segmented-btn:hover:not(:disabled) {
+  color: var(--color-text-primary);
+}
+
+.segmented-btn.active {
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+/* ============================================
+   10. COMPONENTS — PROGRESS RING
+   ============================================ */
+
+.progress-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.progress-ring-bg {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 1.5;
+  opacity: 0.5;
+}
+
+.progress-ring-progress {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke-dashoffset var(--motion-fast) var(--ease-out);
+}
+
+/* ============================================
+   11. COMPONENTS — OVERLAYS
+   ============================================ */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-overlay);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-normal) var(--ease-out);
+  z-index: 10;
+}
+
+.overlay.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--motion-normal) var(--ease-out);
+}
+
+.overlay-content {
+  text-align: center;
+}
+
+.countdown-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+.countdown-number {
+  font-size: var(--font-size-3xl);
+  font-weight: 300;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.paused-label {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-text-primary);
+}
+
+/* ============================================
+   12. COMPONENTS — DIALOG
+   ============================================ */
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-overlay);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 100;
+  padding: var(--space-lg);
+  transition: opacity var(--motion-normal) var(--ease-out);
+}
+
+.dialog-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--motion-normal) var(--ease-out);
+}
+
+.dialog {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  width: 100%;
+  max-width: 340px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+  transform: scale(0.95) translateY(10px);
+  transition: transform var(--motion-normal) var(--ease-out);
+}
+
+.dialog-backdrop.is-open .dialog {
+  transform: scale(1) translateY(0);
+}
+
+.dialog-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.dialog-description {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-sm);
+}
+
+.dialog-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-xl);
+}
+
+/* ============================================
+   13. COMPONENTS — SHEET
+   ============================================ */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--color-backdrop);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-normal) var(--ease-out);
+  z-index: 90;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--motion-normal) var(--ease-out);
+}
+
+.sheet {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: var(--space-md) var(--space-lg);
+  width: 100%;
+  max-width: var(--layout-max-width);
+  transform: translateY(100%);
+  transition: transform var(--motion-normal) var(--ease-out);
+  padding-bottom: calc(var(--space-lg) + var(--safe-bottom));
+}
+
+.sheet-backdrop.is-open .sheet {
+  transform: translateY(0);
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+  margin: var(--space-xs) auto var(--space-md);
+}
+
+.sheet-content {
+  margin-bottom: var(--space-md);
+}
+
+.sheet-settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.sheet-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ============================================
+   14. SCREEN — SETUP
+   ============================================ */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-lg) var(--space-lg) 0;
+}
+
+.setup-content {
+  flex: 1;
+  padding: 0 var(--space-lg) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-lg) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.setting-row:last-of-type {
+  border-bottom: none;
+}
+
+.setting-row--toggle {
+  cursor: default;
+}
+
+#btn-start-workout {
+  margin-top: var(--space-2xl);
+}
+
+/* ============================================
+   15. SCREEN — TIMER
+   ============================================ */
+
+.timer-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  gap: var(--space-sm);
+  position: relative;
+  z-index: 1;
+}
+
+.timer-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(220px, 60vw, 280px);
+  height: clamp(220px, 60vw, 280px);
+}
+
+.timer-display {
+  font-size: clamp(3.5rem, 15vw, 6rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+  z-index: 1;
+}
+
+.timer-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-lg) calc(var(--space-lg) + var(--safe-bottom));
+  position: relative;
+  z-index: 15;
+}
+
+/* ============================================
+   16. SCREEN — COMPLETE
+   ============================================ */
+
+.complete-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  gap: var(--space-md);
+  text-align: center;
+}
+
+.complete-icon {
+  color: var(--color-success);
+  margin-bottom: var(--space-sm);
+}
+
+.complete-icon .icon {
+  width: 48px;
+  height: 48px;
+}
+
+.complete-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-xl);
+  padding-bottom: calc(var(--space-lg) + var(--safe-bottom));
+}
+
+/* ============================================
+   17. RESPONSIVE
+   ============================================ */
+
+@media (min-width: 401px) {
+  :root {
+    --layout-padding: 24px;
+  }
+  .app-header {
+    padding: var(--space-xl) var(--space-xl) 0;
+  }
+  .setup-content {
+    padding: 0 var(--space-xl) var(--space-xl);
+  }
+  .timer-content {
+    padding: var(--space-xl);
+  }
+  .timer-controls {
+    padding: var(--space-xl) var(--space-xl) calc(var(--space-xl) + var(--safe-bottom));
+  }
+  .complete-content {
+    padding: var(--space-xl);
+  }
+}
+
+@media (min-width: 768px) {
+  .app {
+    padding-top: var(--space-xl);
+  }
+}
+
+/* ============================================
+   18. ACCESSIBILITY — REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
