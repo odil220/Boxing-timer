@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Minus, Plus, Settings } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Toggle } from './ui/toggle';
 import { cn } from '../lib/utils';
@@ -13,7 +13,7 @@ function formatTime(seconds) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export default function TimerSetup({ settings, setSettings, onStart, onOpenSettings }) {
+export default function TimerSetup({ settings, setSettings, onStart }) {
   const changeRounds = (delta) => {
     setSettings(s => ({ ...s, rounds: Math.max(1, Math.min(20, s.rounds + delta)) }));
   };
@@ -43,9 +43,6 @@ export default function TimerSetup({ settings, setSettings, onStart, onOpenSetti
     >
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-semibold tracking-tight">Boxing Timer</h1>
-        <Button variant="ghost" size="icon" onClick={onOpenSettings}>
-          <Settings className="h-5 w-5" />
-        </Button>
       </div>
 
       <p className="text-muted-foreground text-sm mb-8">Set your rounds. Start training.</p>

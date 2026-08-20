@@ -1,7 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-
-const ROUND_DURATIONS = [30, 60, 90, 120, 150, 180, 240, 300];
-const REST_DURATIONS = [15, 30, 45, 60, 90, 120, 180, 300];
+import { useState, useEffect, useRef } from 'react';
 
 export function useTimer(settings, soundEnabled) {
   const [timer, setTimer] = useState({
@@ -11,114 +8,173 @@ export function useTimer(settings, soundEnabled) {
     isPaused: false,
   });
 
-  const timerRef = useRef(null);
+  const intervalRef = useRef(null);
   const phaseStartRef = useRef(0);
   const phaseDurationRef = useRef(0);
   const soundRef = useRef(null);
+  const settingsRef = useRef(settings);
+  const currentPhaseRef = useRef('setup');
 
-  const initSound = useCallback(() => {
-    if (soundRef.current) return;
-    try {
-      soundRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    } catch (e) {
-      // no audio
+  useEffect(() => { settingsRef.current = settings; }, [settings]);
+
+  const initSound = () => {
+    if (!soundRef.current) {
+      try { soundRef.current = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
     }
-  }, []);
+  };
 
-  const playBeep = useCallback((freq, duration = 200) => {
-    if (!soundEnabled) return;
-    initSound();
-    const ctx = soundRef.current;
-    if (!ctx) return;
+  // Simple beep
+  const playBeep = (freq, duration = 200) => {
+    if (!soundEnabled) return; initSound();
+    const ctx = soundRef.current; if (!ctx) return;
     try {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = freq;
-      osc.type = 'sine';
+      const osc = ctx.createOscillator(); const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq; osc.type = 'sine';
       gain.gain.setValueAtTime(0.08, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
-      osc.start();
-      osc.stop(ctx.currentTime + duration / 1000);
-    } catch (e) {
-      // silent
-    }
-  }, [soundEnabled, initSound]);
+      osc.start(); osc.stop(ctx.currentTime + duration / 1000);
+    } catch (e) {}
+  };
 
-  const startPhase = useCallback((phase, durationSec) => {
+  // Alarm for round start: short-high, short-high
+  const playRoundStartAlarm = () => {
+    if (!soundEnabled) return; initSound();
+    const ctx = soundRef.current; if (!ctx) return;
+    try {
+      const sequence = [
+        { freq: 880, duration: 120 },
+        { freq: 0, duration: 80 },  // short pause between
+        { freq: 880, duration: 120 },
+      ];
+      let time = ctx.currentTime;
+      sequence.forEach(note => {
+        const osc = ctx.createOscillator(); const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = note.freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.08, time);
+        if (note.freq === 0) {
+          gain.gain.setValueAtTime(0, time);
+        } else {
+          gain.gain.exponentialRampToValueAtTime(0.001, time + note.duration / 1000);
+        }
+        osc.start(time); osc.stop(time + note.duration / 1000);
+        time += note.duration / 1000;
+      });
+    } catch (e) {}
+  };
+
+  // Alarm for rest start: low-long, short-pause, low-long
+  const playRestStartAlarm = () => {
+    if (!soundEnabled) return; initSound();
+    const ctx = soundRef.current; if (!ctx) return;
+    try {
+      const sequence = [
+        { freq: 440, duration: 200 },
+        { freq: 0, duration: 100 },
+        { freq: 440, duration: 200 },
+      ];
+      let time = ctx.currentTime;
+      sequence.forEach(note => {
+        const osc = ctx.createOscillator(); const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = note.freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.08, time);
+        if (note.freq === 0) {
+          gain.gain.setValueAtTime(0, time);
+        } else {
+          gain.gain.exponentialRampToValueAtTime(0.001, time + note.duration / 1000);
+        }
+        osc.start(time); osc.stop(time + note.duration / 1000);
+        time += note.duration / 1000;
+      });
+    } catch (e) {}
+  };
+
+  const clearTimer = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
+  const startPhase = (phase, durationSec, roundNum = 0) => {
+    currentPhaseRef.current = phase;
     phaseDurationRef.current = durationSec * 1000;
     phaseStartRef.current = Date.now();
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(tick, 80);
-  }, []);
+    clearTimer();
 
-  const tick = useCallback(() => {
-    const elapsed = Date.now() - phaseStartRef.current;
-    let remaining = (phaseDurationRef.current - elapsed) / 1000;
+    intervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - phaseStartRef.current;
+      const remaining = (phaseDurationRef.current - elapsed) / 1000;
 
-    if (remaining <= 0) {
-      remaining = 0;
-      handlePhaseEnd();
-      return;
-    }
+      if (remaining <= 0) {
+        clearTimer();
 
-    setTimer(t => ({ ...t, remaining }));
-  }, []);
+        const s = settingsRef.current;
 
-  const handlePhaseEnd = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-
-    const currentPhase = timer.phase;
-    if (currentPhase === 'countdown') {
-      setTimer({ phase: 'round', currentRound: 1, remaining: settings.roundDuration, isPaused: false });
-      setTimeout(() => startPhase('round', settings.roundDuration), 0);
-      playBeep(880, 200);
-    } else if (currentPhase === 'round') {
-      if (timer.currentRound >= settings.rounds) {
-        setTimer({ phase: 'complete', currentRound: timer.currentRound, remaining: 0, isPaused: false });
-      } else {
-        setTimer({ phase: 'rest', remaining: settings.restDuration, isPaused: false });
-        setTimeout(() => startPhase('rest', settings.restDuration), 0);
-        playBeep(440, 200);
+        if (currentPhaseRef.current === 'countdown') {
+          setTimer({ phase: 'round', currentRound: 1, remaining: s.roundDuration, isPaused: false });
+          startPhase('round', s.roundDuration, 1);
+          playRoundStartAlarm();
+        } else if (currentPhaseRef.current === 'round') {
+          if (timer.currentRound >= s.rounds) {
+            setTimer({ phase: 'complete', currentRound: timer.currentRound, remaining: 0, isPaused: false });
+          } else {
+            setTimer(t => ({ ...t, phase: 'rest', remaining: s.restDuration, isPaused: false }));
+            startPhase('rest', s.restDuration, timer.currentRound);
+            playRestStartAlarm();
+          }
+        } else if (currentPhaseRef.current === 'rest') {
+          setTimer(t => {
+            const nextRound = t.currentRound + 1;
+            startPhase('round', s.roundDuration, nextRound);
+            playRoundStartAlarm();
+            return { phase: 'round', currentRound: nextRound, remaining: s.roundDuration, isPaused: false };
+          });
+        }
+        return;
       }
-    } else if (currentPhase === 'rest') {
-      setTimer({ phase: 'round', currentRound: timer.currentRound + 1, remaining: settings.roundDuration, isPaused: false });
-      setTimeout(() => startPhase('round', settings.roundDuration), 0);
-      playBeep(880, 200);
-    }
-  }, [timer, settings, startPhase, playBeep]);
 
-  const startWorkout = useCallback(() => {
+      setTimer(t => ({ ...t, remaining }));
+    }, 80);
+  };
+
+  const startWorkout = () => {
     initSound();
-    if (settings.startCountdown) {
+    const s = settingsRef.current;
+    if (s.startCountdown) {
       setTimer({ phase: 'countdown', currentRound: 0, remaining: 3, isPaused: false });
       startPhase('countdown', 3);
       playBeep(880, 150);
     } else {
-      setTimer({ phase: 'round', currentRound: 1, remaining: settings.roundDuration, isPaused: false });
-      startPhase('round', settings.roundDuration);
-      playBeep(880, 200);
+      setTimer({ phase: 'round', currentRound: 1, remaining: s.roundDuration, isPaused: false });
+      startPhase('round', s.roundDuration, 1);
+      playRoundStartAlarm();
     }
-  }, [settings, startPhase, playBeep, initSound]);
+  };
 
-  const pause = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
+  const pause = () => {
+    clearTimer();
     const elapsed = Date.now() - phaseStartRef.current;
     phaseDurationRef.current = phaseDurationRef.current - elapsed;
     phaseStartRef.current = Date.now();
     setTimer(t => ({ ...t, isPaused: true }));
-  }, []);
+  };
 
-  const resume = useCallback(() => {
+  const resume = () => {
     setTimer(t => ({ ...t, isPaused: false }));
-    startPhase(timer.phase, phaseDurationRef.current / 1000);
-  }, [timer.phase, startPhase]);
+    startPhase(currentPhaseRef.current, phaseDurationRef.current / 1000, timer.currentRound);
+  };
 
-  const endWorkout = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
+  const endWorkout = () => {
+    clearTimer();
     setTimer({ phase: 'setup', currentRound: 0, remaining: 0, isPaused: false });
-  }, []);
+  };
+
+  useEffect(() => () => clearTimer(), []);
 
   return { timer, startWorkout, pause, resume, endWorkout, playBeep };
 }

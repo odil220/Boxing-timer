@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Pause, Play, Square } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Pause, Play } from 'lucide-react';
 import { Button } from './ui/button';
 
 const CIRCUMFERENCE = 2 * Math.PI * 90;
+const RADIUS = 90;
+const CENTER = 100;
+const SIZE = 256; // 16rem
 
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);
@@ -14,66 +17,78 @@ function formatTime(seconds) {
 export default function ActiveTimer({ timer, settings, onPause, onEnd }) {
   const [displayTime, setDisplayTime] = useState(formatTime(timer.remaining));
   const [progress, setProgress] = useState(0);
-  const rafRef = useRef(null);
-  const lastTickRef = useRef(Date.now());
+
+  const lastRemainingRef = useRef(timer.remaining);
+  const lastRemainingTimeRef = useRef(Date.now());
 
   useEffect(() => {
-    setDisplayTime(formatTime(Math.max(0, timer.remaining)));
-    const duration = timer.phase === 'round' ? settings.roundDuration : timer.phase === 'rest' ? settings.restDuration : 0;
-    setProgress(duration > 0 ? Math.max(0, Math.min(1, 1 - timer.remaining / duration)) : 0);
-  }, [timer.remaining, timer.phase, settings]);
+    lastRemainingRef.current = timer.remaining;
+    lastRemainingTimeRef.current = Date.now();
+  }, [timer.remaining, timer.phase, timer.isPaused]);
 
+  const getLiveRemaining = () => {
+    const elapsed = (Date.now() - lastRemainingTimeRef.current) / 1000;
+    return Math.max(0, lastRemainingRef.current - elapsed);
+  };
+
+  // RAF loop for smooth time updates (no blinking)
   useEffect(() => {
-    if (timer.isPaused || timer.phase === 'complete') {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (timer.isPaused || timer.phase === 'complete' || timer.phase === 'setup') {
+      setDisplayTime(formatTime(timer.remaining));
+      const duration = timer.phase === 'round' ? settings.roundDuration : timer.phase === 'rest' ? settings.restDuration : 0;
+      setProgress(duration > 0 ? Math.max(0, Math.min(1, 1 - timer.remaining / duration)) : 0);
       return;
     }
 
+    let rafRef;
     const tick = () => {
-      const now = Date.now();
-      const delta = (now - lastTickRef.current) / 1000;
-      lastTickRef.current = now;
-      // We rely on parent tick; this effect just ensures UI stays smooth
-      rafRef.current = requestAnimationFrame(tick);
+      const remaining = getLiveRemaining();
+      setDisplayTime(formatTime(remaining));
+
+      const duration = timer.phase === 'round' ? settings.roundDuration : timer.phase === 'rest' ? settings.restDuration : 0;
+      setProgress(duration > 0 ? Math.max(0, Math.min(1, 1 - remaining / duration)) : 0);
+
+      rafRef = requestAnimationFrame(tick);
     };
 
-    lastTickRef.current = Date.now();
-    rafRef.current = requestAnimationFrame(tick);
-
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [timer.isPaused, timer.phase]);
+    rafRef = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef);
+  }, [timer.isPaused, timer.phase, settings, timer.remaining]);
 
   const isFinalRound = timer.phase === 'round' && timer.currentRound >= settings.rounds;
   const phaseLabel = timer.isPaused ? 'PAUSED' : timer.phase === 'rest' ? 'REST' : isFinalRound ? 'FINAL ROUND' : 'ROUND';
   const phaseColor = timer.phase === 'rest' ? 'text-muted-foreground' : 'text-primary';
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="flex h-full flex-col items-center justify-center relative"
-    >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={phaseLabel}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-          transition={{ duration: 0.2 }}
-          className={`text-sm font-semibold tracking-[0.2em] uppercase mb-4 ${phaseColor}`}
-        >
-          {phaseLabel}
-        </motion.div>
-      </AnimatePresence>
+    <div className="flex h-full flex-col items-center justify-center relative">
+      <div className={`text-sm font-semibold tracking-[0.2em] uppercase mb-4 ${phaseColor}`}>
+        {phaseLabel}
+      </div>
 
-      <div className="relative flex items-center justify-center mb-6">
-        <svg className="absolute inset-0 h-64 w-64 -rotate-90" viewBox="0 0 200 200">
-          <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-border opacity-50" />
+      {/* Circular timer with centered time display */}
+      <div className="relative flex items-center justify-center mb-6" style={{ width: SIZE, height: SIZE }}>
+        <svg
+          className="absolute inset-0 h-full w-full -rotate-90"
+          viewBox="0 0 200 200"
+          width={SIZE}
+          height={SIZE}
+        >
           <circle
-            cx="100" cy="100" r="90" fill="none" stroke="currentColor" strokeWidth="2"
+            cx={CENTER}
+            cy={CENTER}
+            r={RADIUS}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            className="text-border opacity-30"
+          />
+          <circle
+            cx={CENTER}
+            cy={CENTER}
+            r={RADIUS}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
             strokeLinecap="round"
             className="text-primary transition-all duration-300"
             style={{
@@ -82,15 +97,12 @@ export default function ActiveTimer({ timer, settings, onPause, onEnd }) {
             }}
           />
         </svg>
-        <motion.div
-          key={displayTime}
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.15 }}
-          className="text-7xl font-bold tracking-tighter tabular-nums"
-        >
-          {displayTime}
-        </motion.div>
+
+        <div className="flex flex-col items-center justify-center text-center">
+          <div className="text-7xl font-bold tracking-tighter tabular-nums">
+            {displayTime}
+          </div>
+        </div>
       </div>
 
       <div className="text-sm text-muted-foreground mb-8 tabular-nums">
@@ -105,6 +117,6 @@ export default function ActiveTimer({ timer, settings, onPause, onEnd }) {
           End Workout
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 }

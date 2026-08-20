@@ -5,7 +5,6 @@ import TimerSetup from './components/TimerSetup';
 import ActiveTimer from './components/ActiveTimer';
 import CompletionView from './components/CompletionView';
 import ConfirmDialog from './components/ConfirmDialog';
-import SettingsSheet from './components/SettingsSheet';
 import MusicTab from './components/music/MusicTab';
 import { useTimer } from './hooks/useTimer';
 import { useMusicPlayer } from './hooks/useMusicPlayer';
@@ -21,7 +20,6 @@ export default function App() {
     theme: 'system',
   });
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { timer, startWorkout, pause, resume, endWorkout } = useTimer(settings, settings.soundEnabled);
   const music = useMusicPlayer();
@@ -45,7 +43,7 @@ export default function App() {
       <main className="flex-1 relative overflow-hidden">
         <AnimatePresence mode="wait">
           {showTimer && timer.phase === 'setup' && (
-            <TimerSetup key="setup" settings={settings} setSettings={setSettings} onStart={handleStart} onOpenSettings={() => setSettingsOpen(true)} />
+            <TimerSetup key="setup" settings={settings} setSettings={setSettings} onStart={handleStart} />
           )}
           {showTimer && ['countdown', 'round', 'rest', 'paused'].includes(timer.phase) && (
             <ActiveTimer key="timer" timer={timer} settings={settings} onPause={handlePause} onEnd={handleEnd} />
@@ -59,7 +57,6 @@ export default function App() {
 
       <BottomNav page={page} onChange={setPage} />
       <ConfirmDialog open={dialogOpen} onConfirm={handleConfirmEnd} onCancel={() => setDialogOpen(false)} />
-      <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} settings={settings} setSettings={setSettings} />
     </div>
   );
 }

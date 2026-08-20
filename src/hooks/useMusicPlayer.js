@@ -1,6 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { loadSavedSongs, saveSongs, readAudioMetadata } from './musicStorage';
 
+const AUDIO_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 'webm', 'mp4', '3gp'];
+
+function isAudioFile(file) {
+  if (file.type && file.type.startsWith('audio/')) return true;
+  if (file.type && file.type.startsWith('video/')) return true;
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  return ext && AUDIO_EXTENSIONS.includes(ext);
+}
+
 async function processFile(file) {
   const song = {
     id: Date.now().toString() + Math.random(),
@@ -22,6 +31,7 @@ export function useMusicPlayer() {
 
   const audioRef = useRef(null);
   const animationRef = useRef(null);
+  const pendingPlayRef = useRef(false);
 
   useEffect(() => {
     loadSavedSongs().then(loaded => {
@@ -33,19 +43,42 @@ export function useMusicPlayer() {
     if (audioRef.current) audioRef.current.currentTime = s;
   }, []);
 
-  // Init audio
+  // Init audio element with all event listeners
   useEffect(() => {
     const audio = new Audio();
     audioRef.current = audio;
     audio.preload = 'metadata';
-    audio.addEventListener('timeupdate', () => setCurrentTime(audio.currentTime));
-    audio.addEventListener('loadedmetadata', () => { setDuration(audio.duration || 0); setCurrentTime(0); });
-    audio.addEventListener('ended', () => { setIsPlaying(false); if (animationRef.current) cancelAnimationFrame(animationRef.current); });
-    audio.addEventListener('error', () => { setErrorMessage('Could not play this audio file.'); setIsPlaying(false); });
-    return () => audio.pause();
-  }, []);
 
-  // Animation loop
+    audio.addEventListener('timeupdate', () => setCurrentTime(audio.currentTime));
+    audio.addEventListener('loadedmetadata', () => {
+      setDuration(audio.duration || 0);
+      setCurrentTime(0);
+    });
+    audio.addEventListener('ended', () => {
+      setIsPlaying(false);
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      // Auto-advance to next song
+      if (songs.length > 1 && currentSongIndex < songs.length - 1) {
+        setCurrentSongIndex(prev => prev + 1);
+        setIsPlaying(true);
+      }
+    });
+    audio.addEventListener('error', () => {
+      setErrorMessage('Could not play this audio file.');
+      setIsPlaying(false);
+    });
+    // When audio can play, start playback if it was requested
+    audio.addEventListener('canplay', () => {
+      if (pendingPlayRef.current) {
+        pendingPlayRef.current = false;
+        audio.play().catch(() => {});
+      }
+    });
+
+    return () => audio.pause();
+  }, [songs, currentSongIndex]);
+
+  // Smooth time update animation loop
   useEffect(() => {
     if (!isPlaying || !audioRef.current) return;
     const animate = () => {
@@ -56,33 +89,50 @@ export function useMusicPlayer() {
       }
     };
     animationRef.current = requestAnimationFrame(animate);
-    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
   }, [isPlaying]);
 
   // Load song when index changes
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || currentSongIndex < 0 || currentSongIndex >= songs.length) return;
+
     const song = songs[currentSongIndex];
-    audio.pause(); setIsPlaying(false); setCurrentTime(0); setDuration(0); setErrorMessage('');
+    audio.pause();
+    setCurrentTime(0);
+    setDuration(0);
+    setErrorMessage('');
 
     if (song.url) {
-      audio.src = song.url; audio.load();
+      audio.src = song.url;
+      audio.load();
     } else if (song.data) {
       const blob = new Blob([new Uint8Array(JSON.parse(song.data))], { type: song.type });
       const url = URL.createObjectURL(blob);
-      audio.src = url; audio.load();
+      audio.src = url;
+      audio.load();
       audio.addEventListener('canplay', () => URL.revokeObjectURL(url), { once: true });
     }
-  }, [currentSongIndex, songs]);
 
-  // Play/pause sync
+    if (isPlaying) {
+      pendingPlayRef.current = true;
+    }
+  }, [currentSongIndex, songs, isPlaying]);
+
+  // Play/pause sync (for button clicks)
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || currentSongIndex < 0) return;
+
     if (isPlaying) {
-      audio.play().catch(() => { setErrorMessage('Failed to play audio.'); setIsPlaying(false); });
+      pendingPlayRef.current = true;
+      audio.play().catch(() => {
+        // Will retry on canplay event
+      });
     } else {
+      pendingPlayRef.current = false;
       audio.pause();
     }
   }, [isPlaying, currentSongIndex]);
@@ -94,7 +144,7 @@ export function useMusicPlayer() {
     setErrorMessage('');
 
     for (const file of fileArray) {
-      if (!file.type.startsWith('audio/')) continue;
+      if (!isAudioFile(file)) continue;
       try {
         const song = await processFile(file);
         setSongs(s => {
@@ -102,7 +152,7 @@ export function useMusicPlayer() {
           saveSongs(updated);
           return updated;
         });
-      } catch {
+      } catch (e) {
         setErrorMessage('Failed to process file: ' + file.name);
       }
     }
@@ -115,12 +165,16 @@ export function useMusicPlayer() {
 
   const handleSelect = useCallback((index) => {
     if (index === currentSongIndex) return;
-    setCurrentSongIndex(index); setIsPlaying(true);
-    setCurrentTime(0); setDuration(0); setErrorMessage('');
+    setCurrentSongIndex(index);
+    setIsPlaying(true);
+    setCurrentTime(0);
+    setDuration(0);
+    setErrorMessage('');
   }, [currentSongIndex]);
 
   const handleSeek = useCallback((seconds) => {
-    setAudioTime(seconds); setCurrentTime(seconds);
+    setAudioTime(seconds);
+    setCurrentTime(seconds);
   }, [setAudioTime, setCurrentTime]);
 
   const handleNext = useCallback(() => {

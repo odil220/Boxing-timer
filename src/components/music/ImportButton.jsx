@@ -1,4 +1,4 @@
-import { FolderOpen, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 export default function ImportButton({ onImport }) {
   const handleFileChange = (e) => {
@@ -15,7 +15,7 @@ export default function ImportButton({ onImport }) {
       Import Music
       <input
         type="file"
-        accept="audio/*"
+        accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac"
         multiple
         onChange={handleFileChange}
         className="hidden"
