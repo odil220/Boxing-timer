@@ -23,37 +23,39 @@ export function useTimer(settings, soundEnabled) {
     }
   };
 
-  // Simple beep - louder
-  const playBeep = (freq, duration = 200) => {
+  // Very loud beep using square wave (harsh, attention-grabbing)
+  const playLoudBeep = (freq, duration = 200) => {
     if (!soundEnabled) return; initSound();
     const ctx = soundRef.current; if (!ctx) return;
     try {
       const osc = ctx.createOscillator(); const gain = ctx.createGain();
       osc.connect(gain); gain.connect(ctx.destination);
-      osc.frequency.value = freq; osc.type = 'sine';
-      gain.gain.setValueAtTime(0.8, ctx.currentTime);
+      osc.frequency.value = freq; osc.type = 'square';
+      // Very loud - max gain without clipping
+      gain.gain.setValueAtTime(0.9, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
       osc.start(); osc.stop(ctx.currentTime + duration / 1000);
     } catch (e) {}
   };
 
-  // Alarm for round start: short-high, short-high (very loud)
+  // Round start alarm: VERY LOUD high-pitched square waves
+  // Pattern: 2 sharp short beeps at 1000Hz + 1400Hz
   const playRoundStartAlarm = () => {
     if (!soundEnabled) return; initSound();
     const ctx = soundRef.current; if (!ctx) return;
     try {
       const sequence = [
-        { freq: 880, duration: 120 },
-        { freq: 0, duration: 80 },  // short pause between
-        { freq: 880, duration: 120 },
+        { freq: 1000, duration: 150 },
+        { freq: 0, duration: 60 },
+        { freq: 1400, duration: 150 },
       ];
       let time = ctx.currentTime;
       sequence.forEach(note => {
         const osc = ctx.createOscillator(); const gain = ctx.createGain();
         osc.connect(gain); gain.connect(ctx.destination);
         osc.frequency.value = note.freq;
-        osc.type = 'sine';
-        gain.gain.setValueAtTime(0.8, time);
+        osc.type = 'square';
+        gain.gain.setValueAtTime(0.9, time);
         if (note.freq === 0) {
           gain.gain.setValueAtTime(0, time);
         } else {
@@ -65,23 +67,24 @@ export function useTimer(settings, soundEnabled) {
     } catch (e) {}
   };
 
-  // Alarm for rest start: low-long, short-pause, low-long (very loud)
+  // Rest start alarm: VERY LOUD low-frequency square waves
+  // Pattern: 2 long bass tones at 330Hz + 262Hz
   const playRestStartAlarm = () => {
     if (!soundEnabled) return; initSound();
     const ctx = soundRef.current; if (!ctx) return;
     try {
       const sequence = [
-        { freq: 440, duration: 200 },
+        { freq: 330, duration: 300 },
         { freq: 0, duration: 100 },
-        { freq: 440, duration: 200 },
+        { freq: 262, duration: 300 },
       ];
       let time = ctx.currentTime;
       sequence.forEach(note => {
         const osc = ctx.createOscillator(); const gain = ctx.createGain();
         osc.connect(gain); gain.connect(ctx.destination);
         osc.frequency.value = note.freq;
-        osc.type = 'sine';
-        gain.gain.setValueAtTime(0.8, time);
+        osc.type = 'square';
+        gain.gain.setValueAtTime(0.9, time);
         if (note.freq === 0) {
           gain.gain.setValueAtTime(0, time);
         } else {
@@ -93,30 +96,26 @@ export function useTimer(settings, soundEnabled) {
     } catch (e) {}
   };
 
-  // Alarm for round end: descending tones (very loud)
+  // Round end alarm: VERY LOUD urgent descending alarm tones
+  // Pattern: rapid descending square wave alarm (1200Hz → 900Hz → 600Hz → 400Hz)
   const playRoundEndAlarm = () => {
     if (!soundEnabled) return; initSound();
     const ctx = soundRef.current; if (!ctx) return;
     try {
       const sequence = [
-        { freq: 523, duration: 150 },  // C5
-        { freq: 0, duration: 75 },     // short pause
-        { freq: 440, duration: 150 },   // A4
-        { freq: 0, duration: 75 },     // short pause
-        { freq: 349, duration: 150 },   // F4
+        { freq: 1200, duration: 100 },
+        { freq: 900, duration: 100 },
+        { freq: 600, duration: 100 },
+        { freq: 400, duration: 200 },
       ];
       let time = ctx.currentTime;
       sequence.forEach(note => {
         const osc = ctx.createOscillator(); const gain = ctx.createGain();
         osc.connect(gain); gain.connect(ctx.destination);
         osc.frequency.value = note.freq;
-        osc.type = 'sine';
-        gain.gain.setValueAtTime(0.8, time);
-        if (note.freq === 0) {
-          gain.gain.setValueAtTime(0, time);
-        } else {
-          gain.gain.exponentialRampToValueAtTime(0.001, time + note.duration / 1000);
-        }
+        osc.type = 'square';
+        gain.gain.setValueAtTime(0.9, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + note.duration / 1000);
         osc.start(time); osc.stop(time + note.duration / 1000);
         time += note.duration / 1000;
       });
@@ -171,7 +170,7 @@ export function useTimer(settings, soundEnabled) {
 
       setTimer(t => ({ ...t, remaining }));
     }, 80);
-   };
+  };
 
   const startWorkout = () => {
     initSound();
@@ -179,7 +178,7 @@ export function useTimer(settings, soundEnabled) {
     if (s.startCountdown) {
       setTimer({ phase: 'countdown', currentRound: 0, remaining: 3, isPaused: false });
       startPhase('countdown', 3);
-      playBeep(880, 150);
+      playLoudBeep(1000, 150);
     } else {
       setTimer({ phase: 'round', currentRound: 1, remaining: s.roundDuration, isPaused: false });
       startPhase('round', s.roundDuration, 1);
@@ -207,5 +206,5 @@ export function useTimer(settings, soundEnabled) {
 
   useEffect(() => () => clearTimer(), []);
 
-  return { timer, startWorkout, pause, resume, endWorkout, playBeep };
+  return { timer, startWorkout, pause, resume, endWorkout, playBeep: playLoudBeep };
 }
