@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Pause, Play } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -57,10 +57,26 @@ export default function ActiveTimer({ timer, settings, onPause, onEnd }) {
 
   const isFinalRound = timer.phase === 'round' && timer.currentRound >= settings.rounds;
   const phaseLabel = timer.isPaused ? 'PAUSED' : timer.phase === 'rest' ? 'REST' : isFinalRound ? 'FINAL ROUND' : 'ROUND';
-  const phaseColor = timer.phase === 'rest' ? 'text-muted-foreground' : 'text-primary';
+  const phaseColor = timer.phase === 'rest' ? 'text-red-400' : 'text-primary';
+  const isRest = timer.phase === 'rest';
 
   return (
-    <div className="flex h-full flex-col items-center justify-center relative">
+    <motion.div
+      className="flex h-full w-full flex-col items-center justify-center relative"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      {/* Red overlay during rest time */}
+      {isRest && (
+        <motion.div
+          className="absolute inset-0 bg-red-900/20 pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        />
+      )}
+
       <div className={`text-sm font-semibold tracking-[0.2em] uppercase mb-4 ${phaseColor}`}>
         {phaseLabel}
       </div>
@@ -80,7 +96,7 @@ export default function ActiveTimer({ timer, settings, onPause, onEnd }) {
             fill="none"
             stroke="currentColor"
             strokeWidth="1.5"
-            className="text-border opacity-30"
+            className={isRest ? "text-red-800/30" : "text-border opacity-30"}
           />
           <circle
             cx={CENTER}
@@ -90,7 +106,7 @@ export default function ActiveTimer({ timer, settings, onPause, onEnd }) {
             stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
-            className="text-primary transition-all duration-300"
+            className={isRest ? "text-red-500" : "text-primary transition-all duration-300"}
             style={{
               strokeDasharray: CIRCUMFERENCE,
               strokeDashoffset: CIRCUMFERENCE * (1 - progress),
@@ -99,13 +115,13 @@ export default function ActiveTimer({ timer, settings, onPause, onEnd }) {
         </svg>
 
         <div className="flex flex-col items-center justify-center text-center">
-          <div className="text-7xl font-bold tracking-tighter tabular-nums">
+          <div className={`text-7xl font-bold tracking-tighter tabular-nums ${isRest ? 'text-red-400' : ''}`}>
             {displayTime}
           </div>
         </div>
       </div>
 
-      <div className="text-sm text-muted-foreground mb-8 tabular-nums">
+      <div className={`text-sm mb-8 tabular-nums ${isRest ? 'text-red-300/70' : 'text-muted-foreground'}`}>
         Round {timer.currentRound} of {settings.rounds}
       </div>
 
@@ -117,6 +133,6 @@ export default function ActiveTimer({ timer, settings, onPause, onEnd }) {
           End Workout
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
